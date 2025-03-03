@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot - Subway Outlet Finder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            padding-top: 56px;
+        }
+        .chat-container {
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .chat-input {
+            margin-top: 15px;
+        }
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+        }
+        .user-message {
+            margin-left: auto;
+            background-color: #007bff;
+            color: white;
+            border-radius: 15px 15px 0 15px;
+            padding: 10px 15px;
+        }
+        .bot-message {
+            margin-right: auto;
+            background-color: #e9ecef;
+            border-radius: 15px 15px 15px 0;
+            padding: 10px 15px;
+        }
+        .subway-green {
+            color: #008C15;
+        }
+        .subway-yellow {
+            color: #FFD800;
+        }
+        .suggestion-chip {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #e9ecef;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .suggestion-chip:hover {
+            background-color: #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-subway subway-green me-2"></i>
+                <span class="subway-green">Subway</span> <span class="subway-yellow">Outlet Finder</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-map-marker-alt me-1"></i> Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/catchment"><i class="fas fa-bullseye me-1"></i> Catchment Analysis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/chatbot"><i class="fas fa-robot me-1"></i> Chatbot</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/refresh-data"><i class="fas fa-sync-alt me-1"></i> Refresh Data</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-robot me-2"></i> Subway Outlet Assistant</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chat-container">
+                            <div class="chat-messages" id="chat-messages">
+                                <div class="message bot-message">
+                                    <p class="mb-0">Hello! I'm your Subway Outlet Assistant. How can I help you find Subway restaurants in Kuala Lumpur today?</p>
+                                </div>
+                            </div>
+                            <div class="suggestions mb-3">
+                                <span class="suggestion-chip" onclick="sendSuggestion('How many Subway outlets are in KL?')">How many Subway outlets are in KL?</span>
+                                <span class="suggestion-chip" onclick="sendSuggestion('Which Subway is nearest to KLCC?')">Which Subway is nearest to KLCC?</span>
+                                <span class="suggestion-chip" onclick="sendSuggestion('Do Subway outlets offer delivery?')">Do Subway outlets offer delivery?</span>
+                                <span class="suggestion-chip" onclick="sendSuggestion('What are the opening hours of Subway KLCC?')">What are the opening hours of Subway KLCC?</span>
+                            </div>
+                            <div class="chat-input">
+                                <form id="chat-form" class="d-flex">
+                                    <input type="text" id="user-input" class="form-control me-2" placeholder="Type your question here...">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> About the Chatbot</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>This chatbot can help you find information about Subway outlets in Kuala Lumpur. You can ask questions about:</p>
+                        <ul>
+                            <li>The nearest Subway outlet to a location</li>
+                            <li>Opening hours of specific outlets</li>
+                            <li>Delivery options</li>
+                            <li>Total number of outlets in the city</li>
+                        </ul>
+                        <p>The chatbot uses natural language processing to understand your questions and provide relevant information about Subway outlets.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-4">
+        <div class="container">
+            <p class="mb-0">© 2025 Subway Outlet Finder | Data sourced from Subway Malaysia</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        
+        // Function to add a message to the chat
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            const messageP = document.createElement('p');
+            messageP.className = 'mb-0';
+            messageP.textContent = message;
+            
+            messageDiv.appendChild(messageP);
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Function to send a message to the chatbot API
+        async function sendMessage(message) {
+            // Add user message to chat
+            addMessage(message, true);
+            
+            // Show typing indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-message typing';
+            typingDiv.innerHTML = '<p class="mb-0"><i>Typing...</i></p>';
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            try {
+                // Create form data
+                const formData = new FormData();
+                formData.append('query', message);
+                
+                // Send request to API
+                const response = await fetch('/chatbot/query', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                // Remove typing indicator
+                chatMessages.removeChild(typingDiv);
+                
+                // Add bot response to chat
+                addMessage(data.response);
+            } catch (error) {
+                console.error('Error:', error);
+                // Remove typing indicator
+                chatMessages.removeChild(typingDiv);
+                // Add error message
+                addMessage('Sorry, I encountered an error processing your request. Please try again.');
+            }
+        }
+        
+        // Function to handle form submission
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (message) {
+                sendMessage(message);
+                userInput.value = '';
+            }
+        });
+        
+        // Function to handle suggestion clicks
+        function sendSuggestion(suggestion) {
+            userInput.value = suggestion;
+            sendMessage(suggestion);
+        }
+    </script>
+</body>
+</html>

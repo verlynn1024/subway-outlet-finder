@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catchment Analysis - Subway Outlet Finder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            padding-top: 56px;
+        }
+        .map-container {
+            height: 70vh;
+            width: 100%;
+        }
+        .outlet-list {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .subway-green {
+            color: #008C15;
+        }
+        .subway-yellow {
+            color: #FFD800;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-subway subway-green me-2"></i>
+                <span class="subway-green">Subway</span> <span class="subway-yellow">Outlet Finder</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-map-marker-alt me-1"></i> Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/catchment"><i class="fas fa-bullseye me-1"></i> Catchment Analysis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/chatbot"><i class="fas fa-robot me-1"></i> Chatbot</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/refresh-data"><i class="fas fa-sync-alt me-1"></i> Refresh Data</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i> 5KM Catchment Analysis</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="map-container">
+                            {{ map_html | safe }}
+                        </div>
+                    </div>
+                </div>
+                <div class="card mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> About Catchment Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>This map shows a 5KM radius catchment area around each Subway outlet in Kuala Lumpur. Catchment areas represent the geographical area from which a business attracts customers.</p>
+                        <p>Overlapping catchment areas indicate potential market saturation or competition between outlets. Areas without catchment coverage might represent opportunities for new locations.</p>
+                        <p>The 5KM radius is based on typical urban travel patterns in Kuala Lumpur, where customers are generally willing to travel up to 5KM for food services.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Catchment Insights</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>Outlet Coverage</h6>
+                        <p>Total Outlets: <strong>{{ outlets|length }}</strong></p>
+                        <p>Total Coverage Area: <strong>~{{ outlets|length * 78.5 }} km²</strong> (without overlap)</p>
+                        
+                        <h6 class="mt-4">Overlapping Catchments</h6>
+                        <div id="overlap-data">
+                            <p>Loading overlap data...</p>
+                        </div>
+                        
+                        <h6 class="mt-4">Coverage Density</h6>
+                        <p>Kuala Lumpur Area: ~243 km²</p>
+                        <p>Theoretical Coverage: <strong>{{ (outlets|length * 78.5 / 243 * 100)|round(1) }}%</strong> of KL area</p>
+                        <p class="small text-muted">Note: Actual coverage is lower due to overlaps</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-4">
+        <div class="container">
+            <p class="mb-0">© 2025 Subway Outlet Finder | Data sourced from Subway Malaysia</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fetch catchment analysis data
+        fetch('/api/outlets/catchment-analysis')
+            .then(response => response.json())
+            .then(data => {
+                const overlapDiv = document.getElementById('overlap-data');
+                
+                // Count outlets with overlaps
+                const outletsWithOverlaps = data.filter(outlet => outlet.overlapping_catchments.length > 0).length;
+                const percentWithOverlaps = (outletsWithOverlaps / data.length * 100).toFixed(1);
+                
+                // Find outlet with most overlaps
+                let maxOverlaps = 0;
+                let maxOverlapOutlet = '';
+                
+                data.forEach(outlet => {
+                    if (outlet.overlapping_catchments.length > maxOverlaps) {
+                        maxOverlaps = outlet.overlapping_catchments.length;
+                        maxOverlapOutlet = outlet.name;
+                    }
+                });
+                
+                // Generate HTML
+                let html = `
+                    <p>Outlets with overlapping catchments: <strong>${outletsWithOverlaps}/${data.length} (${percentWithOverlaps}%)</strong></p>
+                    <p>Most overlapped: <strong>${maxOverlapOutlet}</strong> with ${maxOverlaps} overlaps</p>
+                `;
+                
+                overlapDiv.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error fetching catchment data:', error);
+                document.getElementById('overlap-data').innerHTML = '<p class="text-danger">Error loading overlap data</p>';
+            });
+    </script>
+</body>
+</html>
